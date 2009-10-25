@@ -1,0 +1,29 @@
+
+SOURCES=Src/LibpurpleAdapter.c
+OBJECTS=$(SOURCES:.c=.o)
+
+ifeq (x$(LUNA_STAGING),x)
+	LUNA=$(HOME)/luna-desktop-binaries/staging
+else
+	LUNA=$(LUNA_STAGING)
+endif
+
+# Set PKG_CONFIG_PREFIX so we can "find" the purple.pc file:
+PKG_CONFIG_PREFIX=PKG_CONFIG_PATH=$(LUNA)/lib/pkgconfig:$(PKG_CONFIG_PATH)
+
+
+CFLAGS+=-g `$(PKG_CONFIG_PREFIX) pkg-config --cflags glib-2.0 purple` -IIncs -I$(LUNA)/include -I$(LUNA)/include/cjson
+LDFLAGS+=`$(PKG_CONFIG_PREFIX) pkg-config --libs glib-2.0 purple` -L$(LUNA)/lib -llunaservice -lcjson -L/usr/local/lib -Wl,-rpath-link,$(LUNA)/lib
+
+.c.o:
+	echo $(LUNA)
+	echo $(CFLAGS)
+	$(CC) $(CFLAGS) $< -c -o $@
+
+LibpurpleAdapter: $(OBJECTS)
+	echo $(LUNA)
+	echo $(LDFLAGS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+clean:
+	rm -f LibpurpleAdapter Src/LibpurpleAdapter Src/*.o
